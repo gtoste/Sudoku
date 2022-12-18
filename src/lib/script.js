@@ -8,19 +8,20 @@ const createField =(value, notes) =>{
 }
 
 const createBoard = () =>{
-    var board = []
+    var b = []
     for(let i = 0; i < 9; i++)
     {
-        board.push([])
+        b.push([])
         for(let j = 0; j < 9; j++)
         {
-            board[i][j] = createField(-1,[]);
+            b[i][j] = createField(-1,[]);
         }  
     }
-    return board;
+    return b;
 }
 
 
+var board = createBoard();
 
 export const getStyles = (rowIndex, fieldIndex)=>{
     return (rowIndex < 3 || rowIndex > 5) && (fieldIndex >= 3 && fieldIndex <= 5 ) || ( rowIndex >= 3 && rowIndex <= 5 ) && (fieldIndex <= 2 || fieldIndex >= 6)
@@ -29,23 +30,20 @@ export const getStyles = (rowIndex, fieldIndex)=>{
 
 
 export const fillBoard = () =>{
-    var board = createBoard();
-
-    for(let i = 0; i <= 6; i+=3){ fillDiagonaly(board, i); }
-
-    fillRemaining(board, 0, 3);
+    for(let i = 0; i <= 6; i+=3){ fillDiagonaly(i); }
+    fillRemaining(0, 3);
 
     return board;
 } 
 
-const fillMatrix = (board, startRow, startCol)=>{
+const fillMatrix = (startRow, startCol)=>{
     for(let row = startRow; row < startRow + 3; row++)
     {
         for(let col = startCol; col < startCol + 3; col++)
         {
             while(true){
                 let number = getRandomInt(1,9);
-                if(validatePosition(board, row, col, number)){
+                if(validatePosition(row, col, number)){
                     board[row][col].value = number;
                     break;
                 }
@@ -58,7 +56,7 @@ const fillMatrix = (board, startRow, startCol)=>{
 const N = 9;
 const SRN = 3;
 //naprawić to spaggeti
-const fillRemaining = (board, i,j)=>
+const fillRemaining = (i,j)=>
 {
     if (j>=N && i<N-1)
     {
@@ -83,10 +81,10 @@ const fillRemaining = (board, i,j)=>
 
     for (let num = 1; num<=N; num++)
     {
-        if (validatePosition(board,i, j, num))
+        if (validatePosition(i, j, num))
         {
             board[i][j].value = num;
-            if (fillRemaining(board, i, j+1))
+            if (fillRemaining(i, j+1))
             return true;
 
             board[i][j].value = -1;
@@ -95,8 +93,8 @@ const fillRemaining = (board, i,j)=>
     return false;
 }
 
-const fillDiagonaly = (board, i)=>{
-    fillMatrix(board, i, i);
+const fillDiagonaly = (i)=>{
+    fillMatrix(i, i);
 }
 
 
@@ -107,7 +105,7 @@ const getRandomInt = (min, max) =>{
 }
 
 
-const validatePosition = (board, row, col, value) =>{
+const validatePosition = (row, col, value) =>{
 
     const validateRow = (row)=>{
         for(let i = 0; i < board[row].length; i++)
