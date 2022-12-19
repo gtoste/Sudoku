@@ -1,4 +1,6 @@
 const NUMBER_OF_CLUES = 36;
+const boardWidth = 9;
+const matrixWidth = 3;
 
 const createField =(value, notes) =>{
     return {
@@ -7,7 +9,7 @@ const createField =(value, notes) =>{
     }
 }
 
-const createBoard = () =>{
+export const createBoard = () =>{
     var b = []
     for(let i = 0; i < 9; i++)
     {
@@ -22,18 +24,19 @@ const createBoard = () =>{
 
 
 var board = createBoard();
+var playerBoard = board;
 
 export const getStyles = (rowIndex, fieldIndex)=>{
     return (rowIndex < 3 || rowIndex > 5) && (fieldIndex >= 3 && fieldIndex <= 5 ) || ( rowIndex >= 3 && rowIndex <= 5 ) && (fieldIndex <= 2 || fieldIndex >= 6)
 }
 
-
-
 export const fillBoard = () =>{
     for(let i = 0; i <= 6; i+=3){ fillDiagonaly(i); }
     fillRemaining(0, 3);
 
-    return board;
+    playerBoard = JSON.parse(JSON.stringify(board));
+    setBlankPattern();
+    return [playerBoard,board];
 } 
 
 const fillMatrix = (startRow, startCol)=>{
@@ -52,42 +55,40 @@ const fillMatrix = (startRow, startCol)=>{
     }
 }
 
-
-const N = 9;
-const SRN = 3;
-//naprawić to spaggeti
-const fillRemaining = (i,j)=>
+const fillRemaining = (boardRow, boardColumn)=>
 {
-    if (j>=N && i<N-1)
+    if (boardColumn >= boardWidth && boardRow < boardWidth - 1)
     {
-        i = i + 1;
-        j = 0;
+        boardRow = boardRow + 1;
+        boardColumn = 0;
     }
-    if (i>=N && j>=N) return true;
 
-    if (i < SRN)
-    { if (j < SRN)j = SRN; }
-    else if (i < N-SRN)
+    if (boardRow >= boardWidth && boardColumn >= boardWidth) return true; //some sort of break
+
+    if (boardRow < matrixWidth)
+    { if (boardColumn < matrixWidth) boardColumn = matrixWidth; }
+    else if (boardRow < boardWidth-matrixWidth)
     {
-    if (j==Math.floor(i/SRN)*SRN) j =  j + SRN;}
+        if (boardColumn == Math.floor(boardRow/matrixWidth)*matrixWidth) boardColumn =  boardColumn + matrixWidth;
+    }
     else{
-        if (j == N-SRN)
+        if (boardColumn == boardWidth-matrixWidth)
         {
-            i = i + 1;
-            j = 0;
-            if (i>=N) return true;
+            boardRow = boardRow + 1;
+            boardColumn = 0;
+            if (boardRow>=boardWidth) return true;
         }
     }
 
-    for (let num = 1; num<=N; num++)
+    for (let num = 1; num<=boardWidth; num++)
     {
-        if (validatePosition(i, j, num))
+        if (validatePosition(boardRow, boardColumn, num))
         {
-            board[i][j].value = num;
-            if (fillRemaining(i, j+1))
+            board[boardRow][boardColumn].value = num;
+            if (fillRemaining(boardRow, boardColumn+1))
             return true;
 
-            board[i][j].value = -1;
+            board[boardRow][boardColumn].value = -1;
         }
     }
     return false;
@@ -105,39 +106,64 @@ const getRandomInt = (min, max) =>{
 }
 
 
-const validatePosition = (row, col, value) =>{
-
-    const validateRow = (row)=>{
-        for(let i = 0; i < board[row].length; i++)
-        {
-            if(board[row][i].value == value) return false; 
-        }
-        return true;
+const validateRow = (row, value)=>{
+    for(let i = 0; i < board[row].length; i++)
+    {
+        if(board[row][i].value == value) return false; 
     }
-    const validateColumn = (col)=>{
-        for(let i = 0; i < board.length; i++){
-            if(board[i][col].value == value) return false;
-        }
-        return true;
-    }
-
-    const validateBox = (row, col) =>{
-        let rowModulo = row % 3;
-        let colModulo = col % 3;
-
-        let startIndexRow = row - rowModulo;
-        let startIndexCol = col - colModulo;
-
-        for(let indexRow = startIndexRow; indexRow <= startIndexRow + 2; indexRow++)
-        {
-            for(let indexCol = startIndexCol; indexCol <= startIndexCol + 2; indexCol++)
-            {
-                if (board[indexRow][indexCol].value == value) return false;
-            }
-        }  
-        return true;
-    }
-
-
-    return validateRow(row) && validateColumn(col) && validateBox(row, col); 
+    return true;
 }
+const validateColumn = (col, value)=>{
+    for(let i = 0; i < board.length; i++){
+        if(board[i][col].value == value) return false;
+    }
+    return true;
+}
+
+const validateBox = (row, col, value) =>{
+    let rowModulo = row % 3;
+    let colModulo = col % 3;
+
+    let startIndexRow = row - rowModulo;
+    let startIndexCol = col - colModulo;
+
+    for(let indexRow = startIndexRow; indexRow <= startIndexRow + 2; indexRow++)
+    {
+        for(let indexCol = startIndexCol; indexCol <= startIndexCol + 2; indexCol++)
+        {
+            if (board[indexRow][indexCol].value == value) return false;
+        }
+    }  
+    return true;
+}
+
+
+const validatePosition = (row, col, value) =>{
+    return validateRow(row, value) && validateColumn(col, value) && validateBox(row, col, value); 
+}
+
+const setBlankPattern = ()=>{
+    var taken = []
+    for(let i = 0; i < (81-NUMBER_OF_CLUES); i++)
+    {
+        while(true)
+        {
+            let row = getRandomInt(0,8);
+            let col = getRandomInt(0,8);
+
+            if(!taken.some(pair=>(pair.row == row && pair.col == col)))
+            {
+                taken.push({"row": row, "col": col});
+                playerBoard[row][col].value = -1;
+                break;
+            }
+        }
+    }
+}   
+
+
+
+
+
+
+
